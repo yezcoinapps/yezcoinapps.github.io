@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html ng-app="plunker">
+
+  <head>
+    <meta charset="utf-8" />
+    <title>Address Validator Api</title>
+    <script>document.write('<base href="' + document.location + '" />');</script>
+    <link data-require="bootstrap-css" data-semver="3.3.1" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script data-require="angular.js@1.2.x" src="https://code.angularjs.org/1.2.28/angular.js" data-semver="1.2.28"></script>
+
+
+    <!-- Google Maps JavaScript API -->
+    <script
+      type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyAQ7ehsb_54oCyFs7Fi8DJgAZyB-BWkV5o"></script>
+
+    <!-- vsGoogleAutocomplete -->
+    <script src="vs-google-autocomplete.js"></script>
+
+    <script src="app.js"></script>
+    <style>
+       /* Set the size of the div element that contains the map */
+      #mapIframe2 {
+        margin-top: 2em;
+       }
+    </style>
+
+  </head>
+
+
+  <!--
+  * Dependency: Google Maps JavaScript API v3
+  * Google Maps API info: https://developers.google.com/maps/documentation/javascript/places-autocomplete
+  * Usage:
+  *   1. add <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
+  *   2. add vs-google-autocomplete.js
+  *   3. add vs-google-autocomplete directive to input field
+  -->
+  <body ng-controller="MainCtrl">
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-6">
+          <iframe id="mapIFrame" src="gmap.html" style="margin-top:1.5em;width:100%;height:450px" frameBorder="0"  scrolling="no"></iframe>
+        </div>
+        <div class="col-md-6">
+
+      <h3>City Validator</h3>
+      <form>
+        <!-- vs-google-autocomplete="{ types:['(cities)'] }" -->
+        <div class="form-group">
+          <label for="city">City</label>
+          <input vs-google-autocomplete="{ types:['(cities)'] }"
+                 ng-model="city"
+                 type="text"
+                 name="city"
+                 id="city"
+                 class="form-control"
+                 placeholder="Enter city name">
+          <span class="help-block"><b>Model: </b>{{city}}</span>
+        </div>
+
+        <h3>Address Input Form</h3>
+          <div class="form-group">
+            <label for="address">U.S. Style Address</label>
+            <span>(enter an address)</span>
+            <!-- street name and number //--->
+            <div class="row" style="margin-bottom:.5em"><div class="col-md-12" >
+              <input ng-model="address.namenum" type="text" name="addressnamenum" id="addressnamenum"
+                      class="form-control" placeholder="Enter street number and name" ng-keyup="buildAddress()"></div></div>
+            <!-- city, state, zip //--->
+            <div class="row">
+              <div class="col-md-4">
+              <input ng-model="address.city" type="text" name="citynm" id="citynm"
+                      class="form-control" placeholder="Enter city" ng-keyup="buildAddress()"></div>
+              <div class="col-md-4">
+              <input ng-model="address.state" type="text" name="state" id="state"
+                      class="form-control" placeholder="Enter state" ng-keyup="buildAddress()"></div>
+              <div class="col-md-4">
+              <input ng-model="address.postCode" type="text" name="postcode" id="postcode"
+                      class="form-control" placeholder="Enter postcode" ng-keyup="buildAddress()"></div>
+            </div>
+
+            <div class="row" style="margin-top:.5em"><div class="col-md-12">
+              <button type="button" class="btn btn-success" ng-click="validateAddress()"
+                name="chkaddr" id="chkaddr" class="form-control" disabled>Validate Physical Address</button>
+                <button type="button" style="margin-left:.5em" class="btn btn-primary" ng-click="resetForm()"
+                    class="form-control">Clear</button></div>
+            </div>
+
+          </div>
+
+
+        <h3>Google Address Validator, and Search</h3>
+        <!-- parsing address components -->
+        <div class="form-group">
+          <label for="address">Address</label>
+          <span>(enter an address, incl. international address)</span>
+          <input vs-google-autocomplete
+
+                 ng-model="address.name"
+                 vs-place="address.place"
+                 vs-place-id="address.components.placeId"
+                 vs-street-number="address.components.streetNumber"
+                 vs-street="address.components.street"
+                 vs-city="address.components.city"
+                 vs-state="address.components.state"
+                 vs-country-short="address.components.countryCode"
+                 vs-country="address.components.country"
+                 vs-post-code="address.components.postCode"
+                 vs-district="address.components.district"
+                 vs-latitude="address.components.location.lat"
+                 vs-longitude="address.components.location.long"
+
+                 type="text"
+                 name="address"
+                 id="address"
+                 class="form-control"
+                 placeholder="Enter international address">
+          <span class="help-block"><b>Formated Address: </b>{{address.name}}</span>
+          <span class="help-block"><b>Address Status: </b>{{address.found}}</span>
+          <span class="help-block"><b>Place ID(if valid address): </b>{{address.components.placeId}}</span>
+          <!--
+          <span class="help-block"><b>Street number: </b>{{address.components.streetNumber}}</span>
+          <span class="help-block"><b>Street: </b>{{address.components.street}}</span>
+          <span class="help-block"><b>City: </b>{{address.components.city}}</span>
+          <span class="help-block"><b>State: </b>{{address.components.state}}</span>
+          <span class="help-block"><b>Country code: </b>{{address.components.countryCode}}</span>
+          <span class="help-block"><b>Country: </b>{{address.components.country}}</span>
+          <span class="help-block"><b>Postcode: </b>{{address.components.postCode}}</span>
+          <span class="help-block"><b>District: </b>{{address.components.district}}</span>
+          <span class="help-block"><b>Latitude: </b>{{address.components.location.lat}}</span>
+          <span class="help-block"><b>Longitude: </b>{{address.components.location.long}}</span>
+          <pre class="help-block"><b>Place: </b>{{address.place | json}}</pre>
+          //-->
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+  </div>
+
+    <script type="text/javascript" >
+
+    // set location on the map on map
+    function initMap(coord) {
+      // get the map iframe
+      let mapIframe = document.getElementById("mapIFrame");
+      let gMap = mapIframe.contentWindow.document.getElementById("map");
+
+     // The location of flushing
+     let loc = {lat: coord.lat, lng: coord.lng?coord.lng:coord.long, long: coord.long}
+     // The map, centered at Uluru
+     let map = new google.maps.Map(
+         gMap, {zoom: 8, center: loc});
+     // The marker, positioned at Uluru
+     let marker = new google.maps.Marker({position: loc, map: map});
+    }
+    </script>
+
+  </body>
+
+</html>
